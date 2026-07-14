@@ -1,0 +1,47 @@
+name: Extract ZIP File
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  extract-job:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Unzip Archive to Root
+        run: |
+          if [ -f "0002.zip" ]; then
+            unzip -o 0002.zip -d .
+          else
+            echo "Error: 0002.zip not found!"
+            ls -la
+            exit 1
+          fi
+
+      - name: Remove ZIP after extraction
+        run: rm -f 0002.zip
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+
+          git commit -m "Extract zip contents to root"
+
+          git push origin main
